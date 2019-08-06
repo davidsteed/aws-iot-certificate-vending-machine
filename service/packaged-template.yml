@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda for IOT
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  IAMAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service:
+            - credentials.iot.amazonaws.com
+          Action: sts:AssumeRole
+      RoleName: IOTDeviceRole
+  IAMPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for IOT Devices
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - iam:GetRole
+          - iam:PassRole
+          Resource:
+            Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:role/IOTDeviceRole
+  TestServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://testsam773478/960ab1ee85b0b2f7a4bf845e63e9a8a2
+      Handler: testservice
+      Runtime: go1.x
+      Tracing: Active
+      Events:
+        CatchAll:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
+      Environment:
+        Variables:
+          PARAM1: VALUE
+Outputs:
+  TestServiceAPI:
+    Description: API Gateway endpoint URL for Prod environment for First Function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/testservice/
+  TestServiceFunction:
+    Description: First Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - TestServiceFunction
+      - Arn
+  TestServiceFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - TestServiceFunctionRole
+      - Arn
+  IAMAccessRole:
+    Description: IAM Access role for IOT
+    Value:
+      Fn::GetAtt:
+      - IAMAccessRole
+      - Arn
