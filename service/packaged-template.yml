@@ -8,32 +8,43 @@ Resources:
   IAMAccessRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: IOTDeviceRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-          Effect: Allow
+        - Effect: Allow
           Principal:
             Service:
             - credentials.iot.amazonaws.com
           Action: sts:AssumeRole
-      RoleName: IOTDeviceRole
-  IAMPolicy:
-    Type: AWS::IAM::ManagedPolicy
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - execute-api:Invoke
+            Resource:
+              Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TestServiceAPI}/Prod/*/*
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource:
+              Fn::GetAtt:
+              - TestServiceFunction
+              - Arn
+  TestServiceAPI:
+    Type: AWS::Serverless::Api
     Properties:
-      Description: Policy for IOT Devices
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Action:
-          - iam:GetRole
-          - iam:PassRole
-          Resource:
-            Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:role/IOTDeviceRole
+      StageName: Prod
+      Cors: '''*'''
+      Auth:
+        DefaultAuthorizer: AWS_IAM
   TestServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://testsam773478/960ab1ee85b0b2f7a4bf845e63e9a8a2
+      CodeUri: s3://testsam773478/9134290707cf896f6ead62884a71b93f
       Handler: testservice
       Runtime: go1.x
       Tracing: Active
@@ -41,6 +52,8 @@ Resources:
         CatchAll:
           Type: Api
           Properties:
+            RestApiId:
+              Ref: TestServiceAPI
             Path: /hello
             Method: GET
       Environment:
@@ -50,7 +63,7 @@ Outputs:
   TestServiceAPI:
     Description: API Gateway endpoint URL for Prod environment for First Function
     Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/testservice/
+      Fn::Sub: https://${TestServiceAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
   TestServiceFunction:
     Description: First Lambda Function ARN
     Value:

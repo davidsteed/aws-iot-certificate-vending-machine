@@ -67,16 +67,19 @@ let applycert = ( serialNumber, callback ) => {
     console.log("certdata:");
     console.log(certdata);
 
-    if (err) console.log(err, err.stack); // an error occurred
+    if (err) console.log("createKeysAndCertificate",err, err.stack); // an error occurred
     else{
 
        // Create IoT Policy for above cert
        var params = {
-        policyDocument: config.PILICY_DOCUMENT, /* required */
+        policyDocument: config.POLICY_DOCUMENT, /* required */
         policyName: serialNumber /* required */
       };
       iot.createPolicy(params, function(err, data) {
-        if (err) console.log(err, err.stack); // an error occurred
+        if (err) {
+          console.log("createPolicy",err.statusCode,err); // an error occurred
+          callback( null,"{error:'Device Already Exists'}");
+        }
         else{
           console.log(data);
 
@@ -86,7 +89,7 @@ let applycert = ( serialNumber, callback ) => {
             target: certdata.certificateArn /* required */
           };
           iot.attachPolicy(params, function(err, data) {
-            if (err) console.log(err, err.stack); // an error occurred
+            if (err) console.log("attachPolicy",err, err.stack); // an error occurred
             else {
 
               // Create thing for cert
@@ -100,7 +103,7 @@ let applycert = ( serialNumber, callback ) => {
                 }
               };
               iot.createThing(params, function(err, data) {
-                if (err) console.log(err, err.stack); // an error occurred
+                if (err) console.log("createThing",err, err.stack); // an error occurred
                 else {
 
                   // Attach thing for cert
@@ -110,7 +113,7 @@ let applycert = ( serialNumber, callback ) => {
                   };
 
                   iot.attachThingPrincipal(params, function(err, thingdata) {
-                    if (err) console.log(err, err.stack); // an error occurred
+                    if (err) console.log("attachThing",err, err.stack); // an error occurred
                     else {
                       callback( null,certdata );
                     }

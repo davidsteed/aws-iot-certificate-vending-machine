@@ -1,7 +1,0 @@
-*.pem
-*.key 
-*.txt
-*.pfx 
-client
-testservice
-.vscode

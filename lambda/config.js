@@ -9,7 +9,7 @@ var config = {
 
 
 // In actual production, the policy document should be generated dynamically.
-config.PILICY_DOCUMENT = `{
+config.POLICY_DOCUMENT = `{
   "Version": "2012-10-17",
   "Statement": [
     {
